@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { db } = require('../config/database');
+const { registerFailedLogin ,re, resetFailedLogins } = require('../middleware/loginSecurity');
 
 // VULNERABLE: Sin rate limiting para prevenir brute force
 const login = async (req, res) => {
@@ -10,10 +11,12 @@ const login = async (req, res) => {
   
   db.query(query, [username], async (err, results) => {
     if (err) {
+      
       return res.status(500).json({ error: 'Error en el servidor' });
     }
     
     if (results.length === 0) {
+      
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
     
@@ -21,8 +24,11 @@ const login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password);
     
     if (!isValidPassword) {
+   
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
+
+
     
     const token = jwt.sign(
       { id: user.id, username: user.username }, 
